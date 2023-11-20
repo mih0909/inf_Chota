@@ -19,7 +19,7 @@ def frm(chislo, sys):
 	while l != 0:
 		digit = chislo[l-1]
 		if D.get(digit) > sys:
-			return -1234567890987654321
+			return -1234567890
 		n += D.get(digit) * p
 		l-= 1
 		p*= sys
