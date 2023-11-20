@@ -21,10 +21,10 @@ def frm(chislo, sys):
 		if D.get(digit) > sys:
 			return -1234567890
 		n += D.get(digit) * p
-		l-= 1
-		p*= sys
+		l -= 1
+		p *= sys
 	return n
-a,b = map(int, input('to \n').split())
-d,c = input('frm \n').split()
-print(to(a,b))
-print(frm(d,int(c)))
+a, b = map(int, input('to \n').split())
+d, c = input('frm \n').split()
+print(to(a, b))
+print(frm(d, int(c)))
