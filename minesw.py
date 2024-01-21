@@ -11,6 +11,7 @@ class Game:
     CELL_HEIGHT = 41
     def __init__(self):
         root = Tk()
+
         root.geometry(f'{self.WIDTH * self.CELL_WIDTH}x{self.HEIGHT * self.CELL_HEIGHT}')
         root.maxsize(self.WIDTH * self.CELL_WIDTH, self.HEIGHT * self.CELL_HEIGHT)
         root.minsize(self.WIDTH * self.CELL_WIDTH, self.HEIGHT * self.CELL_HEIGHT)
@@ -19,9 +20,11 @@ class Game:
         set_mines(self.MINES, field)
         set_numbers(field)
         # print(field)
-        print(field[0][0].r_cnt)
+        print(field[0][0].round)
         root.mainloop()
 
+    def terminate(self):
+        del self
 class Mine:
 
     def __init__(self, _master, _x, _y, ):
@@ -29,24 +32,32 @@ class Mine:
         self.btn.grid(row=_y, column=_x)
         self.is_bomb = False
         self.r_cnt = 0
-        self.btn.config(command=self.on_clic())
+        self.btn.config(command=self.on_clic)
+        self.round = [None] * 8
+
 
     def set_mine(self):
         self.is_bomb = True
         self.btn.config(bg="red")
 
     def check_around(self, lst: list):
-        for i in range(len(lst)):
-            if lst[i].is_bomb:
-                continue
-            lst[i].r_cnt += 1
-            lst[i].btn.config(text=f'{lst[i].r_cnt}')
-            # cell.btn.config(bg='blue')
-
+        self.round = lst[:]
+        for i in self.round:
+            if i and not i.is_bomb:
+                i.btn.config(bg='green')
 
     def on_clic(self):
-        # self.btn.config(text=f'{self.r_cnt}')
+        if self.is_bomb:
+            del game
+        self.btn.config(text=f'{self.r_cnt}')
         # self.btn.destroy()
+        # print(1)
+        pass
+
+    def detonate(self):
+        pass
+
+    def open(self):
         pass
 
 def set_field(width, height, master):
@@ -61,25 +72,29 @@ def set_mines(m_cnt: int, lst: list):
 
 
 def set_numbers(field):
-    for x in range(len(field)):
-        for y in range(len(field[0])):
-            if field[x][y].is_bomb:
-                round = []
-                for i in range(-1, 2):
-                    for j in range(-1,2):
-                        if x+i < 0 or y+j < 0 or (i == 0 and j == 0):
-                            continue
-                        else:
-                            try:
-                                round.append(field[x+i][y+j])
-                            except Exception:
-                                continue
-                field[x][y].check_around(round)
+    y_e = len(field)
+    x_e = len(field[0])
+    for y in range(y_e):
+        for x in range(x_e):
+            if field[y][x].is_bomb:
+                print(y, x, end=' бомба\n')
+                env = [
+                    [None, field[(y - 1) % y_e][(x - 1) % x_e]][0 <= y - 1 <= y_e and 0 <= x - 1 <= x_e],
+                    [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 <= y_e and 0 <= x + 0 <= x_e],
+                    [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 <= y_e and 0 <= x + 1 <= x_e],
+                    [None, field[(y + 0) % y_e][(x - 1) % x_e]][0 <= y + 0 <= y_e and 0 <= x - 1 <= x_e],
+                    [None, field[(y + 0) % y_e][(x + 1) % x_e]][0 <= y + 0 <= y_e and 0 <= x + 1 <= x_e],
+                    [None, field[(y + 1) % y_e][(x - 1) % x_e]][0 <= y + 1 <= y_e and 0 <= x - 1 <= x_e],
+                    [None, field[(y + 1) % y_e][(x + 0) % x_e]][0 <= y + 1 <= y_e and 0 <= x + 0 <= x_e],
+                    [None, field[(y + 1) % y_e][(x + 1) % x_e]][0 <= y + 1 <= y_e and 0 <= x + 1 <= x_e],
+                ]
+                field[x][y].check_around(env)
 
 
 if __name__ == '__main__':
 
     game = Game()
+
     # WIDTH = 7
     # HEIGHT = 7
     # MINES = 10
