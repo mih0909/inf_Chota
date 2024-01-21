@@ -1,12 +1,13 @@
 from tkinter import *
 from random import randint
-
+import sys
+sys.setrecursionlimit(1000)
 
 class Game:
 
-    WIDTH = 7
-    HEIGHT = 7
-    MINES = 10
+    WIDTH = 20
+    HEIGHT = 20
+    MINES = 50
     CELL_WIDTH = 38
     CELL_HEIGHT = 41
     def __init__(self):
@@ -34,7 +35,7 @@ class Mine:
         self.r_cnt = 0
         self.btn.config(command=self.on_clic)
         self.round = [None] * 8
-
+        self.opened = False
 
     def set_mine(self):
         self.is_bomb = True
@@ -42,23 +43,32 @@ class Mine:
 
     def check_around(self, lst: list):
         self.round = lst[:]
-        for i in self.round:
-            if i and not i.is_bomb:
-                i.btn.config(bg='green')
+
+    def set_numbers(self):
+        for cell in self.round:
+            if cell and not cell.is_bomb:
+                cell.btn.config(bg='green')
+                cell.r_cnt += 1
 
     def on_clic(self):
         if self.is_bomb:
-            del game
+            print(1)
+            return
         self.btn.config(text=f'{self.r_cnt}')
-        # self.btn.destroy()
-        # print(1)
+        self.open()
         pass
 
     def detonate(self):
         pass
 
     def open(self):
-        pass
+        if self.opened:
+            return
+        if self.r_cnt == 0:
+            for cell in self.round:
+                if cell:
+                    cell.on_clic()
+
 
 def set_field(width, height, master):
     mines = [[Mine(_master=master, _x=x, _y=y) for x in range(width)] for y in range(height)]
@@ -67,7 +77,7 @@ def set_field(width, height, master):
 
 def set_mines(m_cnt: int, lst: list):
     for i in range(m_cnt):
-        a = lst[randint(0, len(lst)-1)][randint(0, len(lst[0])-1)]
+        a = lst[randint(0, len(lst[0])-1)][randint(0, len(lst)-1)]
         a.set_mine()
 
 
@@ -76,20 +86,19 @@ def set_numbers(field):
     x_e = len(field[0])
     for y in range(y_e):
         for x in range(x_e):
+            env = [
+                [None, field[(y - 1) % y_e][(x - 1) % x_e]][0 <= y - 1 < y_e and 0 <= x - 1 < x_e],
+                [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 < y_e and 0 <= x + 0 < x_e],
+                [None, field[(y - 1) % y_e][(x + 1) % x_e]][0 <= y - 1 < y_e and 0 <= x + 1 < x_e],
+                [None, field[(y + 0) % y_e][(x - 1) % x_e]][0 <= y + 0 < y_e and 0 <= x - 1 < x_e],
+                [None, field[(y + 0) % y_e][(x + 1) % x_e]][0 <= y + 0 < y_e and 0 <= x + 1 < x_e],
+                [None, field[(y + 1) % y_e][(x - 1) % x_e]][0 <= y + 1 < y_e and 0 <= x - 1 < x_e],
+                [None, field[(y + 1) % y_e][(x + 0) % x_e]][0 <= y + 1 < y_e and 0 <= x + 0 < x_e],
+                [None, field[(y + 1) % y_e][(x + 1) % x_e]][0 <= y + 1 < y_e and 0 <= x + 1 < x_e],
+            ]
+            field[y][x].check_around(env)
             if field[y][x].is_bomb:
-                print(y, x, end=' бомба\n')
-                env = [
-                    [None, field[(y - 1) % y_e][(x - 1) % x_e]][0 <= y - 1 <= y_e and 0 <= x - 1 <= x_e],
-                    [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 <= y_e and 0 <= x + 0 <= x_e],
-                    [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 <= y_e and 0 <= x + 1 <= x_e],
-                    [None, field[(y + 0) % y_e][(x - 1) % x_e]][0 <= y + 0 <= y_e and 0 <= x - 1 <= x_e],
-                    [None, field[(y + 0) % y_e][(x + 1) % x_e]][0 <= y + 0 <= y_e and 0 <= x + 1 <= x_e],
-                    [None, field[(y + 1) % y_e][(x - 1) % x_e]][0 <= y + 1 <= y_e and 0 <= x - 1 <= x_e],
-                    [None, field[(y + 1) % y_e][(x + 0) % x_e]][0 <= y + 1 <= y_e and 0 <= x + 0 <= x_e],
-                    [None, field[(y + 1) % y_e][(x + 1) % x_e]][0 <= y + 1 <= y_e and 0 <= x + 1 <= x_e],
-                ]
-                field[x][y].check_around(env)
-
+                field[y][x].set_numbers()
 
 if __name__ == '__main__':
 
