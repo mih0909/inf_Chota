@@ -134,5 +134,4 @@ class Mine:
 
 
 if __name__ == '__main__':
-
     game = Game(15, 15, 1)
