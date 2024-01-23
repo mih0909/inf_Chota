@@ -2,22 +2,29 @@ from tkinter import *
 from random import randint
 
 
+global field
+
+
 class Game:
 
     CELL_WIDTH = 38
     CELL_HEIGHT = 41
 
     def __init__(self, width, height, mines):
+
+        global field
         self.WIDTH = width
         self.HEIGHT = height
         self.MINES = mines
         self.root = Tk()
 
-        self.root.geometry(f'{self.WIDTH * self.CELL_WIDTH}x{self.HEIGHT * self.CELL_HEIGHT}')
+        self.root.geometry(f'{self.WIDTH * self.CELL_WIDTH}x{self.HEIGHT * self.CELL_HEIGHT}+'
+                           f'{self.root.winfo_screenwidth()//3}+{self.root.winfo_screenheight()//3}')
         self.root.maxsize(self.WIDTH * self.CELL_WIDTH, self.HEIGHT * self.CELL_HEIGHT)
         self.root.minsize(self.WIDTH * self.CELL_WIDTH, self.HEIGHT * self.CELL_HEIGHT)
 
         field = self.set_field()
+
         self.set_mines(field)
         self.set_numbers(field)
         self.root.mainloop()
@@ -28,33 +35,35 @@ class Game:
 
     def set_mines(self, lst: list):
         for i in range(self.MINES):
-            a = lst[randint(0, len(lst[0]) - 1)][randint(0, len(lst) - 1)]
-            a.set_mine()
+            cell = lst[randint(0, len(lst[0]) - 1)][randint(0, len(lst) - 1)]
+            while cell.is_bomb:
+                cell = lst[randint(0, len(lst[0]) - 1)][randint(0, len(lst) - 1)]
+            cell.set_mine()
 
-    def set_numbers(self, field):
-        y_e = len(field)
-        x_e = len(field[0])
+    def set_numbers(self, mine_field,):
+        y_e = len(mine_field)
+        x_e = len(mine_field[0])
         for y in range(y_e):
             for x in range(x_e):
                 env = [
-                    [None, field[(y - 1) % y_e][(x - 1) % x_e]][0 <= y - 1 < y_e and 0 <= x - 1 < x_e],
-                    [None, field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 < y_e and 0 <= x + 0 < x_e],
-                    [None, field[(y - 1) % y_e][(x + 1) % x_e]][0 <= y - 1 < y_e and 0 <= x + 1 < x_e],
-                    [None, field[(y + 0) % y_e][(x - 1) % x_e]][0 <= y + 0 < y_e and 0 <= x - 1 < x_e],
-                    [None, field[(y + 0) % y_e][(x + 1) % x_e]][0 <= y + 0 < y_e and 0 <= x + 1 < x_e],
-                    [None, field[(y + 1) % y_e][(x - 1) % x_e]][0 <= y + 1 < y_e and 0 <= x - 1 < x_e],
-                    [None, field[(y + 1) % y_e][(x + 0) % x_e]][0 <= y + 1 < y_e and 0 <= x + 0 < x_e],
-                    [None, field[(y + 1) % y_e][(x + 1) % x_e]][0 <= y + 1 < y_e and 0 <= x + 1 < x_e],
+                    [None, mine_field[(y - 1) % y_e][(x - 1) % x_e]][0 <= y - 1 < y_e and 0 <= x - 1 < x_e],
+                    [None, mine_field[(y - 1) % y_e][(x + 0) % x_e]][0 <= y - 1 < y_e and 0 <= x + 0 < x_e],
+                    [None, mine_field[(y - 1) % y_e][(x + 1) % x_e]][0 <= y - 1 < y_e and 0 <= x + 1 < x_e],
+                    [None, mine_field[(y + 0) % y_e][(x - 1) % x_e]][0 <= y + 0 < y_e and 0 <= x - 1 < x_e],
+                    [None, mine_field[(y + 0) % y_e][(x + 1) % x_e]][0 <= y + 0 < y_e and 0 <= x + 1 < x_e],
+                    [None, mine_field[(y + 1) % y_e][(x - 1) % x_e]][0 <= y + 1 < y_e and 0 <= x - 1 < x_e],
+                    [None, mine_field[(y + 1) % y_e][(x + 0) % x_e]][0 <= y + 1 < y_e and 0 <= x + 0 < x_e],
+                    [None, mine_field[(y + 1) % y_e][(x + 1) % x_e]][0 <= y + 1 < y_e and 0 <= x + 1 < x_e],
                 ]
-                field[y][x].check_around(env)
-                if field[y][x].is_bomb:
-                    field[y][x].set_numbers()
+                mine_field[y][x].check_around(env)
+                if mine_field[y][x].is_bomb:
+                    mine_field[y][x].set_r_cnt()
 
 
 class Mine:
 
     def __init__(self, _master, _x, _y, ):
-        self.btn = Button(master=_master, width=4, height=2, bg='white',)
+        self.btn = Button(master=_master, width=4, height=2, bg='#808080',)
         self.btn.grid(row=_y, column=_x)
         self.is_bomb = False
         self.r_cnt = 0
@@ -70,26 +79,37 @@ class Mine:
     def check_around(self, lst: list):
         self.round = lst[:]
 
-    def set_numbers(self):
+    def set_r_cnt(self):
         for cell in self.round:
             if cell and not cell.is_bomb:
                 # cell.btn.config(bg='green')
                 cell.r_cnt += 1
 
     def on_clic(self):
-        colors = ['#AA00AA', '#191970', '#00BFFF', '#00FFFF', '#00FF7F']
+        colors = ['#000000', '#f53c2c', '#0000FF', '#005AFF', '#8B00FF', '#00FF7F']
         if self.is_bomb:
             self.detonate()
         if self.r_cnt != 0:
             self.btn.config(text=f'{self.r_cnt}', fg=colors[self.r_cnt])
-        self.btn.config(bg='gray')
+        self.btn.config(bg='#ABABAB')
         self.open()
         pass
 
     def detonate(self):
+        self.block()
+        _x = self.root.winfo_x()
+        _y = self.root.winfo_y()
         self.end = Toplevel(self.root)
-        btn = Button(master=self.end, text='close', command=self.restart)
-        btn.pack()
+        self.end.geometry(f'{self.root.geometry()}')  # f'100x100+{_x}+{_y}'
+        btn = Button(master=self.end, text='restart\n15x15',
+                     command=lambda: self.restart(15, 15, 20), width=6, height=3)
+        btn.grid(row=0, column=0)
+        btn = Button(master=self.end, text='restart\n9x9',
+                     command=lambda: self.restart(9, 9, 9), width=6, height=3)
+        btn.grid(row=0, column=1)
+        btn = Button(master=self.end, text='restart\n5x5',
+                     command=lambda: self.restart(5, 5, 3), width=6, height=3)
+        btn.grid(row=0, column=2)
         self.end.mainloop()
 
     def open(self):
@@ -101,10 +121,16 @@ class Mine:
                     self.opened = True
                     cell.on_clic()
 
-    def restart(self):
+    def restart(self, w, h, m):
         self.end.destroy()
         self.root.destroy()
-        game = Game(width=9, height=9, mines=10)
+        Game(width=w, height=h, mines=m)
+
+    def block(self):
+        global field
+        for i in field:
+            for j in i:
+                j.btn['state'] = 'disabled'
 
 
 if __name__ == '__main__':
