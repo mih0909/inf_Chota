@@ -9,6 +9,12 @@ class Game:
 
     CELL_WIDTH = 38
     CELL_HEIGHT = 41
+    empty_cells = 0
+
+    @staticmethod
+    def compare():
+        if Mine.remain == Game.empty_cells:
+            Mine.detonate(ending='Победа')
 
     def __init__(self, width, height, mines):
 
@@ -16,8 +22,9 @@ class Game:
         self.WIDTH = width
         self.HEIGHT = height
         self.MINES = mines
-        self.root = Tk()
+        Game.empty_cells = width * height - mines
 
+        self.root = Tk()
         self.root.geometry(f'{self.WIDTH * self.CELL_WIDTH}x{self.HEIGHT * self.CELL_HEIGHT}+'
                            f'{self.root.winfo_screenwidth()//3}+{self.root.winfo_screenheight()//3}')
         self.root.maxsize(self.WIDTH * self.CELL_WIDTH, self.HEIGHT * self.CELL_HEIGHT)
@@ -62,15 +69,19 @@ class Game:
 
 class Mine:
 
+    remain = 0
+    root = None
+    end = None
+
     def __init__(self, _master, _x, _y, ):
         self.btn = Button(master=_master, width=4, height=2, bg='#808080',)
         self.btn.grid(row=_y, column=_x)
         self.is_bomb = False
         self.r_cnt = 0
-        self.btn.config(command=self.on_clic)
+        self.btn.config(command=lambda: [self.on_clic(), Game.compare()])
         self.round = [None] * 8
         self.opened = False
-        self.root = _master
+        Mine.root = _master
 
     def set_mine(self):
         self.is_bomb = True
@@ -86,47 +97,51 @@ class Mine:
                 cell.r_cnt += 1
 
     def on_clic(self):
-        colors = ['#000000', '#f53c2c', '#0000FF', '#005AFF', '#8B00FF', '#00FF7F']
+        if not self.opened:
+            Mine.remain += 1
+        self.opened = True
+        self.open()
         if self.is_bomb:
-            self.detonate()
+            Mine.detonate()
+        if self.r_cnt == 0:
+            for cell in self.round:
+                if cell and not cell.opened:
+                    cell.on_clic()
+        pass
+
+    def open(self):
+        colors = ['#000000', '#f53c2c', '#0000FF', '#005AFF', '#8B00FF', '#00FF7F']
         if self.r_cnt != 0:
             self.btn.config(text=f'{self.r_cnt}', fg=colors[self.r_cnt])
         self.btn.config(bg='#ABABAB')
-        self.open()
         pass
 
-    def detonate(self):
-        self.block()
-        _x = self.root.winfo_x()
-        _y = self.root.winfo_y()
-        self.end = Toplevel(self.root)
-        self.end.geometry(f'{self.root.geometry()}')  # f'100x100+{_x}+{_y}'
-        btn = Button(master=self.end, text='restart\n15x15',
-                     command=lambda: self.restart(15, 15, 20), width=6, height=3)
+    @staticmethod
+    def detonate(ending='НЕ ПОБЕДА'):
+        Mine.block()
+        Mine.remain = 0
+        Mine.end = Toplevel(Mine.root)
+        Mine.end.title(ending)
+        Mine.end.geometry(f'{Mine.root.geometry()}')
+        btn = Button(master=Mine.end, text='restart\n15x15',
+                     command=lambda: Mine.restart(15, 15, 20), width=6, height=3)
         btn.grid(row=0, column=0)
-        btn = Button(master=self.end, text='restart\n9x9',
-                     command=lambda: self.restart(9, 9, 9), width=6, height=3)
+        btn = Button(master=Mine.end, text='restart\n9x9',
+                     command=lambda: Mine.restart(9, 9, 9), width=6, height=3)
         btn.grid(row=0, column=1)
-        btn = Button(master=self.end, text='restart\n5x5',
-                     command=lambda: self.restart(5, 5, 3), width=6, height=3)
+        btn = Button(master=Mine.end, text='restart\n5x5',
+                     command=lambda: Mine.restart(5, 5, 3), width=6, height=3)
         btn.grid(row=0, column=2)
-        self.end.mainloop()
+        Mine.end.mainloop()
 
-    def open(self):
-        if self.opened:
-            return
-        if self.r_cnt == 0:
-            for cell in self.round:
-                if cell:
-                    self.opened = True
-                    cell.on_clic()
-
-    def restart(self, w, h, m):
-        self.end.destroy()
-        self.root.destroy()
+    @staticmethod
+    def restart(w, h, m):
+        Mine.end.destroy()
+        Mine.root.destroy()
         Game(width=w, height=h, mines=m)
 
-    def block(self):
+    @staticmethod
+    def block():
         global field
         for i in field:
             for j in i:
