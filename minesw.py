@@ -11,11 +11,6 @@ class Game:
     CELL_HEIGHT = 41
     empty_cells = 0
 
-    @staticmethod
-    def compare():
-        if Mine.remain == Game.empty_cells:
-            Mine.detonate(ending='Победа')
-
     def __init__(self, width, height, mines):
 
         global field
@@ -65,6 +60,11 @@ class Game:
                 mine_field[y][x].check_around(env)
                 if mine_field[y][x].is_bomb:
                     mine_field[y][x].set_r_cnt()
+
+    @staticmethod
+    def compare():
+        if Mine.remain == Game.empty_cells:
+            Mine.detonate(ending='W')
 
 
 class Mine:
@@ -117,7 +117,7 @@ class Mine:
         pass
 
     @staticmethod
-    def detonate(ending='НЕ ПОБЕДА'):
+    def detonate(ending='L'):
         Mine.block()
         Mine.remain = 0
         Mine.end = Toplevel(Mine.root)
